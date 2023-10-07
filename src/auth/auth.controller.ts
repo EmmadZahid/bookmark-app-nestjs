@@ -13,7 +13,7 @@ export class AuthController{
     }
 
     @Post('signin')
-    public signin(@Body() dto:AuthDto): Promise<User>{
+    public signin(@Body() dto:AuthDto): Promise<{access_token: string}>{
         return this.authService.signin(dto)
     }
 }

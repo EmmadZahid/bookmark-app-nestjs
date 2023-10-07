@@ -4,10 +4,12 @@ import * as argon from 'argon2';
 import { AuthDto } from "./dto/auth.dto";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { User } from "@prisma/client";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
 @Injectable()
 export class AuthService{
 
-    constructor(private prisma:PrismaService){}
+    constructor(private prisma:PrismaService, private jwt: JwtService, private config:ConfigService){}
 
     public async signup(dto:AuthDto): Promise<User>{
         try {
@@ -19,7 +21,7 @@ export class AuthService{
                 }
             })
     
-            return user   
+            return user
         } catch (error) {
             if(error instanceof PrismaClientKnownRequestError){
                 if(error.code === 'P2002')  //Prisma own error for duplicate
@@ -29,7 +31,7 @@ export class AuthService{
         }
     }
 
-    public async signin(dto:AuthDto): Promise<User>{
+    public async signin(dto:AuthDto): Promise<{access_token: string}>{
         const user:User = await this.prisma.user.findUnique({where:{
             email: dto.email
         }})
@@ -37,12 +39,29 @@ export class AuthService{
         if(user){
             const passwordMatch = await argon.verify(user.hash, dto.password)
             if(passwordMatch){
-                return user
+                return this.signToken(user.id, user.email)   
             } else {
                 throw new BadRequestException("Invalid credentials")    
             }
         } else {
             throw new BadRequestException("Invalid credentials")
         }
+    }
+
+    private signToken(userId:number, email:string): {access_token: string}{
+        const payload = {
+            sub: userId,
+            email
+        }
+
+        const token:string = this.jwt.sign(payload,{
+            expiresIn: '15m',
+            secret: this.config.get('JWT_SECERET')
+        })
+
+        return {
+            access_token: token
+        }
+
     }
 }
