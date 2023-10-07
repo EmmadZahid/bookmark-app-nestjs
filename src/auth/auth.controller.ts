@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { User } from "@prisma/client";
 import { AuthService } from "./auth.service";
 import { AuthDto } from "./dto/auth.dto";
@@ -8,10 +8,11 @@ export class AuthController{
     constructor(private authService:AuthService){}
 
     @Post('signup')
-    public signup(@Body() dto:AuthDto):Promise<User>{
+    public signup(@Body() dto:AuthDto):Promise<{access_token: string}>{
         return this.authService.signup(dto)
     }
 
+    @HttpCode(HttpStatus.OK)
     @Post('signin')
     public signin(@Body() dto:AuthDto): Promise<{access_token: string}>{
         return this.authService.signin(dto)

@@ -11,7 +11,7 @@ export class AuthService{
 
     constructor(private prisma:PrismaService, private jwt: JwtService, private config:ConfigService){}
 
-    public async signup(dto:AuthDto): Promise<User>{
+    public async signup(dto:AuthDto): Promise<{access_token: string}>{
         try {
             const hash = await argon.hash(dto.password)
             const user = await this.prisma.user.create({
@@ -21,7 +21,7 @@ export class AuthService{
                 }
             })
     
-            return user
+            return this.signToken(user.id, user.email)   
         } catch (error) {
             if(error instanceof PrismaClientKnownRequestError){
                 if(error.code === 'P2002')  //Prisma own error for duplicate
