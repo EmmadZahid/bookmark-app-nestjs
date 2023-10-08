@@ -10,12 +10,10 @@
     "prisma:dev:rm": "docker compose rm dev-db -s -f -v",
     "prisma:dev:up": "docker compose up dev-db -d",
     "prisma:dev:restart": "npm run prisma:dev:rm && npm run prisma:dev:up && sleep 1 && npm run prisma:dev:deploy",
-    
     "prisma:test:deploy": "dotenv -e .env.test -- prisma migrate deploy",
     "prisma:test:rm": "docker compose rm test-db -s -f -v",
     "prisma:test:up": "docker compose up test-db -d",
     "prisma:test:restart": "dotenv -e .env.test -- npm run prisma:test:rm && npm run prisma:test:up && sleep 1 && npm run prisma:test:deploy",
-    
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -62,6 +60,7 @@
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
+    "pactum": "^3.5.1",
     "prettier": "^3.0.0",
     "prisma": "^5.4.1",
     "source-map-support": "^0.5.21",
