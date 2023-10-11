@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import * as pactum from 'pactum';
 import { AuthDto } from 'src/auth/dto/auth.dto';
+import { EditUserDto } from 'src/user/dto';
 
 describe('AppController (e2e)', () => {
   let app:INestApplication
@@ -106,7 +107,7 @@ describe('AppController (e2e)', () => {
     it('should get current user', () => {
       return pactum.spec().get('/users/me').withHeaders({
         Authorization: 'Bearer $S{userAccessToken}'
-      }).expectStatus(200) //.inspect()
+      }).expectStatus(200).stores('userId','id') //.inspect()
     })
 
     it('should throw if token is invalid', () => {
@@ -118,6 +119,53 @@ describe('AppController (e2e)', () => {
     it('should throw if token is not present', () => {
       return pactum.spec().get('/users/me').expectStatus(401)
     })
+
+    it('should edit', () => {
+      const dto:EditUserDto = new EditUserDto()
+      dto.firstName = "Emmad88"
+      dto.lastName = "Zahid88"
+      return pactum
+        .spec()
+        .withBody(dto)
+        .withHeaders({
+          Authorization: 'Bearer $S{userAccessToken}'
+        })
+        .patch('/users/edit/$S{userId}')
+        .expectStatus(200)
+        .expectBodyContains(dto.firstName)
+        .expectBodyContains(dto.lastName)
+    })
+
+    it('should throw if logged in user is different', () => {
+      const dto:EditUserDto = new EditUserDto()
+      dto.firstName = "Emmad88"
+      dto.lastName = "Zahid88"
+      return pactum
+        .spec()
+        .withBody(dto)
+        .withHeaders({
+          Authorization: 'Bearer $S{userAccessToken}'
+        })
+        .patch('/users/edit/$S{userId}1')
+        .expectStatus(403)
+    })
+
+    // it('should throw if all fields are empty', () => {
+    //   const dto:EditUserDto = new EditUserDto()
+    //   dto.firstName = ""
+    //   dto.lastName = ""
+    //   return pactum
+    //     .spec()
+    //     .withBody(dto)
+    //     .withHeaders({
+    //       Authorization: 'Bearer $S{userAccessToken}'
+    //     })
+    //     .patch('/users/edit/$S{userId}')
+    //     .expectStatus(400)
+    //     .inspect()
+    // })
+
+
   })
 
   describe('Bookmark', ()=>{
