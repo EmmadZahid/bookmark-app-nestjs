@@ -67,7 +67,7 @@ describe('AppController (e2e)', () => {
 
     describe('Signin', ()=>{
       it('should signin', () =>{
-        return pactum.spec().post('/auth/signin').withBody(dto).expectStatus(200)
+        return pactum.spec().post('/auth/signin').withBody(dto).expectStatus(200).stores('userAccessToken','access_token')
       })
 
       it('should throw if email is empty', () =>{
@@ -102,7 +102,25 @@ describe('AppController (e2e)', () => {
     })
   })
 
-  describe('User', ()=>{})
+  describe('User', () => {
+    it('should get current user', () => {
+      return pactum.spec().get('/users/me').withHeaders({
+        Authorization: 'Bearer $S{userAccessToken}'
+      }).expectStatus(200) //.inspect()
+    })
 
-  describe('Bookmark', ()=>{})
+    it('should throw if token is invalid', () => {
+      return pactum.spec().get('/users/me').withHeaders({
+        Authorization: 'Bearer $S{userAccessToken}Someinvalid string'
+      }).expectStatus(401)
+    })
+
+    it('should throw if token is not present', () => {
+      return pactum.spec().get('/users/me').expectStatus(401)
+    })
+  })
+
+  describe('Bookmark', ()=>{
+    
+  })
 });
