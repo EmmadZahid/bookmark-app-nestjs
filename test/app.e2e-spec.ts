@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import * as pactum from 'pactum';
 import { AuthDto } from 'src/auth/dto/auth.dto';
 import { EditUserDto } from 'src/user/dto';
+import { CreateBookmarkDto, EditBookmarkDto } from 'src/bookmark/dto';
 
 describe('AppController (e2e)', () => {
   let app:INestApplication
@@ -44,6 +45,13 @@ describe('AppController (e2e)', () => {
     describe('Signup', ()=>{
       it('should signup', () =>{
         return pactum.spec().post('/auth/signup').withBody(dto).expectStatus(201)
+      })
+
+      it('should signup second user', () =>{
+        let dto2:AuthDto = new AuthDto()
+        dto2.email = "emmad2@gmail.com"
+        dto2.password = "1234"
+        return pactum.spec().post('/auth/signup').withBody(dto2).expectStatus(201).stores('user2AccessToken','access_token')
       })
 
       it('should throw if email is empty', () =>{
@@ -169,6 +177,107 @@ describe('AppController (e2e)', () => {
   })
 
   describe('Bookmark', ()=>{
-    
+    it('should create bookmark', () => {
+      const dto:CreateBookmarkDto = new CreateBookmarkDto()
+      dto.title = "Angular title"
+      dto.description = "Some description"
+      dto.link = "https://angular.io"
+      
+      return pactum
+      .spec()
+      .withBody(dto)
+      .withHeaders({
+          Authorization: 'Bearer $S{userAccessToken}'
+      })
+      .post('/bookmarks')
+      .expectStatus(201)
+      .stores('bookmarkId', 'id')
+    })
+
+    it('should get bookmarks by id', () =>{
+      return pactum
+        .spec()
+        .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}'
+        })
+        .get('/bookmarks/$S{bookmarkId}')
+        .expectStatus(200)
+    })
+
+    it('should get bookmarks', () =>{
+      return pactum
+        .spec()
+        .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}'
+        })
+        .get('/bookmarks')
+        .expectStatus(200)
+        .expectJsonLength(1)
+    })
+
+    it('should update bookmark by id', () =>{
+      const dto:EditBookmarkDto = new EditBookmarkDto()
+      dto.title = "Angular title(updated)"
+      dto.description = "Some description(updated)"
+      dto.link = "https://angular.io/home"
+      
+      return pactum
+      .spec()
+      .withBody(dto)
+      .withHeaders({
+          Authorization: 'Bearer $S{userAccessToken}'
+      })
+      .patch('/bookmarks/$S{bookmarkId}')
+      .expectStatus(200)
+      .expectBodyContains(dto.title)
+      .expectBodyContains(dto.description)
+      .expectBodyContains(dto.link)
+    })
+
+    it('should throw if other user tries to update the bookmark', () =>{
+      const dto:EditBookmarkDto = new EditBookmarkDto()
+      dto.title = "Angular title(updated)"
+      dto.description = "Some description(updated)"
+      dto.link = "https://angular.io/home"
+      
+      return pactum
+      .spec()
+      .withBody(dto)
+      .withHeaders({
+          Authorization: 'Bearer $S{user2AccessToken}'
+      })
+      .patch('/bookmarks/$S{bookmarkId}')
+      .expectStatus(403)
+    })
+
+    it('should throw if other user tries to delete the bookmark', () =>{
+      return pactum
+        .spec()
+        .withHeaders({
+            Authorization: 'Bearer $S{user2AccessToken}'
+        })
+        .delete('/bookmarks/$S{bookmarkId}')
+        .expectStatus(403)
+    })
+
+    it('should delete bookmark by id', () =>{
+      return pactum
+        .spec()
+        .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}'
+        })
+        .delete('/bookmarks/$S{bookmarkId}')
+        .expectStatus(204)
+    })
+
+    it('should throw if bookmark not found on delete', () =>{
+      return pactum
+        .spec()
+        .withHeaders({
+            Authorization: 'Bearer $S{userAccessToken}'
+        })
+        .delete('/bookmarks/$S{bookmarkId}')
+        .expectStatus(404)
+    })
   })
 });
