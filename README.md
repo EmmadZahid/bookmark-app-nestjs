@@ -33,12 +33,10 @@ $ npm run start:prod
 
 ## Test
 
-Right now some of the unit tests are implemented. E2E and integration tests need to be implemented.
+Right now only E2E tests are implemented.
 
 ```bash
 # unit tests
-$ npm run test
+$ npm run test:e2e
 
-# test coverage
-$ npm run test:cov
 ```
